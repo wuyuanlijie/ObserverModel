@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <script type="text/javascript">
+    // 发布-订阅者模式：定义对象间的一种一对多的关系，当一个对象的状态发生改变的时候，所有依赖它的对象都将被通知
+    // 典型的例子即是买房子，购房者与售楼处的关系
+    // 一般情况，购房者需要每天去看房子的信息，什么时候开始出售，需要每天联系售楼处的MM，这样子MM就会很忙。
+    // 现在有一个解决的方法，购房者可留下电话号码，他们订阅了房子开售的消息。
+    // 售楼者作为发布者，会在合适的时候，MM通知小明、小红、小晴等等，遍历花名册来发信息
+    // 作用：
+    // 1、购房者就不需要每天打电话给MM咨询信息
+    //   （广泛应用于异步编程，替代传递回调函数）
+    // 2、购房者和售楼处之间不再耦合在一起。售楼处不再关心购房者的信息，只需要的号码。售楼处的任何变动，
+    // 也不会影响购买者，只要记到发信息
+    //   （取代对象之间的硬编码的通知机制，一个对象不再显示的调用另个对个的某个接口。）
+    //   （当有新的购房者出现，发布者的代码不需要任何的改变；发布者的改变，也不会影响到对方，只需要记到triggle遍历发消息）
+    // 网站登录，有header头部，nav导航，消息列表，购物车等模块 渲染前提条件即是ajax异步请求获取用户的登录的信息
+    // => 我们就不需要去等登录成功login.success()再去渲染，这样会僵硬。登录和用户信息模块产生了强耦合
+    // 我们只要每个业务模块自行去订阅的登录成功的消息事件
+    // 这样我们就不要等待，他们就是购房者，订阅消息。只需要登录成功，每个模块都会开始进行各自的业务处理
+
+    //封装
+    let event ={
+      clientList: [],
+      listen (key, fn) {
+        if(!this.clientList[key]) { //如果之前没有订阅过该消息 创建订阅缓存列表
+          this.clientList[key] = [] //存放着不同的人对这个key特定房间的房价信息订阅
+        }
+        this.clientList[key].push(fn)  //存放到数组
+      },
+      trigger () {
+        var key = Array.prototype.shift.call(arguments), //获取到订阅的房间大小key
+            fns = this.clientList[key]  //找到对应key全部的订阅记录
+        if(!fns || fns.length === 0) { //如果没有绑定对应key的信息
+          return false
+        }
+        for(let fn of fns) { //发布消息给所有订阅该key的人 对应这价格
+          fn.apply(this, arguments)
+        }
+      },
+      remove (key, fn) { //删除特点的fn 或者 清空全部的fn
+        var fns = this.clientList[key]
+        if(!fns) { //对应的key的消息没有人订阅
+          return false
+        }
+        if(!fn) { //这里没有传入的具体的订阅人的消息例如小明 表示清空全部的订阅
+          fns && (fns.length = 0)
+        } else {
+          //存在订阅人的消息回调 遍历寻找删除 反向遍历
+          for ([index,item] of fns.entries()) {
+            if(fn === item) {
+              fns.splice(index,1)
+            }
+          }
+        }
+      }
+    }
+    //动态安装发布-订阅功能
+    let installEvent = function (obj) {
+      for( let i in event) { //for-in 遍历对象的属性 得到属性 event[i] 得到对应的属性值
+        obj[i] = event[i]
+      }
+    }
+
+    //开始售楼啦
+    var saleOffices = {}
+    installEvent(saleOffices) //这个对象就用有功能
+    saleOffices.listen('80平米', fn1 = function(price) {
+      console.log(`小明订阅了80平米房子的价格： ${price}`)
+    })
+    saleOffices.listen('110平米', fn2 = function(price) {
+      console.log(`小红订阅了110平米房子的价格： ${price}`)
+    })
+
+
+    saleOffices.remove("80平米", fn1) //这里删除了特定fn1的订阅
+
+    saleOffices.trigger("80平米", 200000)
+    saleOffices.trigger("110平米", 300000)
+
+  </script>
+
+</body>
+</html>

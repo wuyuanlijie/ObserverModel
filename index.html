@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>观察者模式又称发布-订阅模式</title>
+</head>
+<body>
+
+  <script type="text/javascript">
+  //  //添加发布者
+  //   var saleOffice = {}
+  //   saleOffice.clientList = [] //缓存列表存放着订阅者的回调函数fn
+  //   saleOffice.listen = function(fn) {//增加订阅者
+  //     this.clientList.push(fn) //把消息放入列表
+  //   }
+  //   saleOffice.trigger = function() { //发布消息
+  //     for(let fn of this.clientList) {
+  //       fn.apply(this, arguments)  //发布什么消息  调用了fn的参数传递 arguments传到fn
+  //     }
+  //   }
+  //   // 添加订阅者fn
+  //   saleOffice.listen((price, squareMeter) => {
+  //     console.log(`小明订阅: 价格=${price}\n 大小=${squareMeter}`)
+  //   })
+  //   saleOffice.listen((price, squareMeter) => {
+  //     console.log(`小红订阅: 价格=${price}\n 大小=${squareMeter}`)
+  //   })
+  //   saleOffice.trigger(200000, 88)
+  //   saleOffice.trigger(300000, 110)
+
+  var saleOffices = {} //定义发布者
+  saleOffices.clientList = {} //缓存列表 存放着订阅者的回调函数(也就是 他们的要求)
+  saleOffices.listen = function(key, fn) { //添加订阅者（string, function）
+    if(!this.clientList[key]) {//如果还没有订阅过此类消息 就消息创建一个缓存列表(第一次来 就留下号码 订阅消息)
+      //key 就是订阅自己想要的信息 clientList的属性 数组——里面存放着fn的方法 (fn就是对应key的 消息)
+      this.clientList[key] = [];  //他可以订阅很多消息
+    }
+    this.clientList[key].push(fn)  //订阅的消息 放到消息缓存列表（里面可以对着房子的不同价格）
+  }
+  saleOffices.trigger = function() {  //发布消息
+    // var key = Array.prototype.shift.call(arguments) 取出第一个值
+    // Array.from(arguments) //转成一个真正的数组
+    var key = [].shift.apply(arguments) //用当前对象取代Array
+        fns = this.clientList[key] //里面存放着不同的价格信息
+
+    if(!fns || fns.length === 0) { //如果不存在订阅消息 就返回
+      return false
+    }
+    for(let fn of fns) { //fns数组 存放着订阅的特定类型的 价格函数
+      //发布消息 房子的价格  apply只能传入对象和数组
+      fn.apply(this, arguments)  //trigger中的参数 最终传到了订阅者得fn中
+    }
+    // let i,fn; fn = fns[i++] ;
+  }
+  saleOffices.listen("88平米", function(price) {
+    console.log(`小明订阅88平米房子的价格：${price}`)
+  })
+  saleOffices.listen("110平米", function(price) {
+    console.log(`小红订阅110平米房子的价格：${price}`)
+  })
+  //发布消息
+  saleOffices.trigger('88平米', '20万')
+  saleOffices.trigger('110平米', '30万')
+  saleOffices.trigger('110平米', '50万')
+
+  </script>
+
+</body>
+</html>
